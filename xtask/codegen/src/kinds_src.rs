@@ -112,6 +112,7 @@ pub const JS_KINDS_SRC: KindsSrc = KindsSrc {
         "try",
         "true",
         "typeof",
+        "using",
         "var",
         "void",
         "while",

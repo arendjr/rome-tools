@@ -38,6 +38,7 @@ impl Rule for UseSingleVarDeclarator {
     type Query = Ast<JsVariableStatement>;
     type State = (
         JsSyntaxToken,
+        Option<JsSyntaxToken>,
         JsVariableDeclaratorList,
         Option<JsSyntaxToken>,
     );
@@ -52,7 +53,11 @@ impl Rule for UseSingleVarDeclarator {
             semicolon_token,
         } = node.as_fields();
 
-        let JsVariableDeclarationFields { kind, declarators } = declaration.ok()?.as_fields();
+        let JsVariableDeclarationFields {
+            async_token,
+            kind,
+            declarators,
+        } = declaration.ok()?.as_fields();
 
         let kind = kind.ok()?;
 
@@ -60,7 +65,7 @@ impl Rule for UseSingleVarDeclarator {
             return None;
         }
 
-        Some((kind, declarators, semicolon_token))
+        Some((kind, async_token, declarators, semicolon_token))
     }
 
     fn diagnostic(ctx: &RuleContext<Self>, _state: &Self::State) -> Option<RuleDiagnostic> {
@@ -83,7 +88,7 @@ impl Rule for UseSingleVarDeclarator {
             return None;
         }
 
-        let (kind, declarators, semicolon_token) = state;
+        let (kind, async_token, declarators, semicolon_token) = state;
 
         let index = prev_parent
             .children()
@@ -194,10 +199,16 @@ impl Rule for UseSingleVarDeclarator {
                         )
                     };
 
-                    let mut builder = make::js_variable_statement(make::js_variable_declaration(
+                    let mut builder = make::js_variable_declaration(
                         kind,
                         make::js_variable_declarator_list([declarator], []),
-                    ));
+                    );
+
+                    if let Some(async_token) = async_token {
+                        builder = builder.with_async_token(async_token.clone());
+                    }
+
+                    let mut builder = make::js_variable_statement(builder.build());
 
                     let semicolon_token = if index + 1 == declarators_len {
                         last_semicolon_token

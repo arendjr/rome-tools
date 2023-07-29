@@ -1028,7 +1028,7 @@ pub(crate) fn is_nth_at_let_variable_statement(p: &mut JsParser, n: usize) -> bo
     matches!(p.nth(n + 1), T!['{'] | T!['[']) || is_nth_at_identifier(p, n + 1)
 }
 
-/// A var, const, or let declaration statement such as `var a = 5, b;` or `let {a, b} = foo;`
+/// A var, const, let, or using declaration statement such as `var a = 5, b;` or `let {a, b} = foo;`
 // test js var_decl
 // var a = 5;
 // let { foo, bar } = 5;
@@ -1037,6 +1037,9 @@ pub(crate) fn is_nth_at_let_variable_statement(p: &mut JsParser, n: usize) -> bo
 // const { foo5: [bar11], baz6 } = {};
 // let foo6 = "lorem", bar7 = "ipsum", third8 = "value", fourth = 6;
 // var q, w, e, r, t;
+// using handle = acquireFileHandle();
+// using { handle } = acquireFileHandle();
+// await using obj = g();
 //
 // test_err js variable_declaration_statement_err
 // let a, { b } = { a: 10 }
@@ -1044,6 +1047,8 @@ pub(crate) fn is_nth_at_let_variable_statement(p: &mut JsParser, n: usize) -> bo
 // const e;
 // let [f];
 // const { g };
+// using e;
+// async const b = 5;
 pub(crate) fn parse_variable_statement(
     p: &mut JsParser,
     context: StatementContext,
